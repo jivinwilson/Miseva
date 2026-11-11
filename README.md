@@ -6,7 +6,8 @@ Restaurant operations SaaS, built restaurant-first as a modular monolith: Spring
 
 ## Status
 Slice 0 (base): business registration (restaurant only), sign-in with rotating refresh tokens, branches with plan limits, staff invitations with roles and branch access, per-business data isolation.
-Next: slice 1 (tables, menu, orders, kitchen screen, bills).
+Slice 1 (dine-in core): tables per branch, a business-wide menu (prices in minor units, per-item tax in basis points), table sessions with order lines that snapshot price and tax, a kitchen screen (new → preparing → ready → served, refreshes every 5 seconds), bills with per-line tax and split manual payments (cash, card, UPI, other). Bills, bill lines and payments are append-only for the application role.
+Next: slice 2 (QR ordering for guests), slice 3 (recipes and ingredient stock).
 
 ## Local setup
 1. `powershell -ExecutionPolicy Bypass -File scripts\db-init.ps1` creates the `misva` database, the `misva_owner` (migrations) and `misva_app` (runtime) roles, and a git-ignored `.env`.

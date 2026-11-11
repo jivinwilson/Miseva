@@ -136,3 +136,92 @@ export interface InvitationPreview {
 }
 
 export const getHealth = () => apiFetch<HealthResponse>("/health");
+
+export interface TableView {
+  id: string;
+  code: string;
+  seats: number;
+  area?: string;
+  active: boolean;
+  sessionId?: string;
+  sessionStatus?: "open" | "billed";
+  guests?: number;
+  openedAt?: string;
+  openLines: number;
+  amountMinor: number;
+}
+
+export interface MenuCategory {
+  id: string;
+  name: string;
+  sortOrder: number;
+  active: boolean;
+}
+
+export interface MenuItem {
+  id: string;
+  categoryId: string;
+  name: string;
+  description?: string;
+  priceMinor: number;
+  taxRateBp: number;
+  available: boolean;
+  sortOrder: number;
+}
+
+export interface Menu {
+  categories: MenuCategory[];
+  items: MenuItem[];
+}
+
+export type LineStatus = "new" | "preparing" | "ready" | "served" | "cancelled";
+
+export interface OrderLine {
+  id: string;
+  sessionId: string;
+  branchId: string;
+  tableCode: string;
+  itemName: string;
+  unitPriceMinor: number;
+  taxRateBp: number;
+  quantity: number;
+  note?: string;
+  status: LineStatus;
+  createdAt: string;
+  statusChangedAt: string;
+}
+
+export interface SessionView {
+  session: {
+    id: string;
+    branchId: string;
+    tableId: string;
+    tableCode: string;
+    status: "open" | "billed" | "closed";
+    guests: number;
+    openedAt: string;
+    closedAt?: string;
+  };
+  lines: OrderLine[];
+  subtotalMinor: number;
+  taxMinor: number;
+  totalMinor: number;
+  currency: string;
+  bill?: {
+    bill: {
+      id: string;
+      billNumber: string;
+      currency: string;
+      subtotalMinor: number;
+      taxMinor: number;
+      totalMinor: number;
+      status: "issued" | "paid";
+      issuedAt: string;
+      paidAt?: string;
+    };
+    lines: { itemName: string; quantity: number; unitPriceMinor: number; taxRateBp: number; lineSubtotal: number; lineTax: number }[];
+    payments: { id: string; method: string; amountMinor: number; reference?: string; receivedAt: string }[];
+    paidMinor: number;
+    dueMinor: number;
+  };
+}
