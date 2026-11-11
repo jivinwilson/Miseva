@@ -1,0 +1,17 @@
+node_modules/
+.next/
+out/
+build/
+.gradle/
+*.class
+*.log
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+storage/
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
