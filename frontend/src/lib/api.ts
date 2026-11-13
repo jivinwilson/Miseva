@@ -143,6 +143,8 @@ export interface TableView {
   seats: number;
   area?: string;
   active: boolean;
+  qrToken: string;
+  pendingGuestOrders: number;
   sessionId?: string;
   sessionStatus?: "open" | "billed";
   guests?: number;
@@ -224,4 +226,23 @@ export interface SessionView {
     paidMinor: number;
     dueMinor: number;
   };
+}
+
+export interface PublicMenu {
+  businessName: string;
+  branchName: string;
+  tableCode: string;
+  currency: string;
+  categories: MenuCategory[];
+  items: MenuItem[];
+}
+
+export interface GuestOrderStatus {
+  id: string;
+  status: "pending" | "accepted" | "rejected";
+}
+
+export interface PendingGuestOrder {
+  order: { id: string; branchId: string; tableId: string; tableCode: string; status: string; guests: number; note?: string; createdAt: string };
+  lines: { id: string; itemName: string; unitPriceMinor: number; quantity: number; note?: string }[];
 }

@@ -142,8 +142,11 @@ class PlatformFlowTests {
         String email = email();
         register(email);
         mvc.perform(post("/api/v1/businesses/register").contentType(MediaType.APPLICATION_JSON)
-                        .content(registerJson(email, "restaurant")))
+                        .content(registerJson(email.toUpperCase(), "restaurant")))
                 .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("EMAIL_TAKEN"));
+        mvc.perform(post("/api/v1/auth/login").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\":\"%s\",\"password\":\"%s\"}".formatted(email.toUpperCase(), PASSWORD)))
+                .andExpect(status().isOk());
     }
 
     @Test

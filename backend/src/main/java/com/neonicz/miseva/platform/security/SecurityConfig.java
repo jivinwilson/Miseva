@@ -50,6 +50,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/api/v1/businesses/register").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/v1/invitations/preview").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/v1/invitations/accept").permitAll()
+                .requestMatchers("/api/v1/public/**").permitAll()
                 .anyRequest().authenticated());
         return http.build();
     }

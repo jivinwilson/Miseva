@@ -7,7 +7,10 @@ Restaurant operations SaaS, built restaurant-first as a modular monolith: Spring
 ## Status
 Slice 0 (base): business registration (restaurant only), sign-in with rotating refresh tokens, branches with plan limits, staff invitations with roles and branch access, per-business data isolation.
 Slice 1 (dine-in core): tables per branch, a business-wide menu (prices in minor units, per-item tax in basis points), table sessions with order lines that snapshot price and tax, a kitchen screen (new → preparing → ready → served, refreshes every 5 seconds), bills with per-line tax and split manual payments (cash, card, UPI, other). Bills, bill lines and payments are append-only for the application role.
-Next: slice 2 (QR ordering for guests), slice 3 (recipes and ingredient stock).
+Slice 2 (QR ordering): every table has a regenerable QR code (`/t/<token>`); guests see the menu, build a cart and send an order without signing in; staff accept or decline it from the Floor page, and accepted orders open the table or join its open order and go to the kitchen. At most 3 pending guest orders per table.
+Next: slice 3 (recipes and ingredient stock).
+
+Note for this machine: Windows Smart App Control blocks PostgreSQL's unsigned `citext` extension, so emails are stored lowercase as plain text with a unique index on `lower(email)` (migration V0009).
 
 ## Local setup
 1. `powershell -ExecutionPolicy Bypass -File scripts\db-init.ps1` creates the `misva` database, the `misva_owner` (migrations) and `misva_app` (runtime) roles, and a git-ignored `.env`.

@@ -3,6 +3,7 @@ package com.neonicz.miseva.platform.identity;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.jdbc.core.simple.JdbcClient;
@@ -34,7 +35,7 @@ public class UserRepository {
 
     private void insertWithStatus(UUID id, String email, String hash, String fullName, String status) {
         jdbc.sql("INSERT INTO users (id, email, password_hash, full_name, status) VALUES (:id, :email, :hash, :name, :status)")
-                .param("id", id).param("email", email).param("hash", hash).param("name", fullName).param("status", status)
+                .param("id", id).param("email", email.toLowerCase(Locale.ROOT)).param("hash", hash).param("name", fullName).param("status", status)
                 .update();
     }
 
@@ -45,7 +46,7 @@ public class UserRepository {
     }
 
     public Optional<UserAccount> findByEmail(String email) {
-        return jdbc.sql("SELECT " + COLUMNS + " FROM users WHERE email = :email")
+        return jdbc.sql("SELECT " + COLUMNS + " FROM users WHERE lower(email) = lower(:email)")
                 .param("email", email).query(this::map).optional();
     }
 

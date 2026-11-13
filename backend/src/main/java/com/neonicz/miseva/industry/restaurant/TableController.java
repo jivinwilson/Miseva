@@ -53,6 +53,13 @@ class TableController {
         return tables.create(RestaurantActor.of(p), branchId, b.code(), b.seats(), b.area());
     }
 
+    @PostMapping("/tables/{id}/qr/regenerate")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasAuthority('restaurant.table.manage')")
+    void regenerateQr(@AuthenticationPrincipal MisevaPrincipal p, @PathVariable UUID id) {
+        tables.regenerateQr(RestaurantActor.of(p), id);
+    }
+
     @PutMapping("/tables/{id}")
     @PreAuthorize("hasAuthority('restaurant.table.manage')")
     TableRow update(@AuthenticationPrincipal MisevaPrincipal p, @PathVariable UUID id, @Valid @RequestBody UpdateTable b) {

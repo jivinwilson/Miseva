@@ -50,6 +50,11 @@ class OrderRepository {
                 .optional();
     }
 
+    Optional<UUID> liveSessionOfTable(UUID businessId, UUID tableId) {
+        return jdbc.sql("SELECT id FROM dining_sessions WHERE business_id = :b AND table_id = :t AND status IN ('open', 'billed') FOR UPDATE")
+                .param("b", businessId).param("t", tableId).query(UUID.class).optional();
+    }
+
     Session lockSession(UUID businessId, UUID id) {
         jdbc.sql("SELECT id FROM dining_sessions WHERE business_id = :b AND id = :id FOR UPDATE")
                 .param("b", businessId).param("id", id).query(UUID.class).optional();

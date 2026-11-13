@@ -172,3 +172,28 @@ export async function recordPaymentAction(_prev: ActionState, fd: FormData): Pro
   revalidatePath(next);
   return { ok: true };
 }
+
+export async function decideGuestOrderAction(fd: FormData) {
+  const back = text(fd, "back") || "/dashboard/floor";
+  const decision = text(fd, "decision") === "accept" ? "accept" : "reject";
+  try {
+    await apiFetch(`/restaurant/guest-orders/${encodeURIComponent(text(fd, "id"))}/${decision}`, {
+      method: "POST",
+      token: await token(back),
+    });
+  } catch (e) {
+    if (e instanceof ApiError && e.problem.status === 401) redirect(`/auth/refresh?next=${encodeURIComponent(back)}`);
+  }
+  revalidatePath("/dashboard/floor");
+}
+
+export async function regenerateQrAction(fd: FormData) {
+  const tableId = text(fd, "tableId");
+  const back = text(fd, "back");
+  try {
+    await apiFetch(`/restaurant/tables/${encodeURIComponent(tableId)}/qr/regenerate`, { method: "POST", token: await token(back) });
+  } catch (e) {
+    if (e instanceof ApiError && e.problem.status === 401) redirect(`/auth/refresh?next=${encodeURIComponent(back)}`);
+  }
+  revalidatePath("/dashboard/tables");
+}

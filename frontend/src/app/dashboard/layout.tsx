@@ -5,7 +5,7 @@ import { DashboardNav } from "@/components/dashboard-nav";
 export default function DashboardLayout({ children }: LayoutProps<"/dashboard">) {
   return (
     <div className="min-h-screen bg-ivory">
-      <header className="flex flex-wrap items-center justify-between gap-3 bg-obsidian px-6 py-3 text-champagne">
+      <header className="flex flex-wrap items-center justify-between gap-3 bg-obsidian px-6 py-3 text-champagne print:hidden">
         <div className="flex min-w-0 flex-wrap items-center gap-x-8 gap-y-2">
           <span className="font-serif text-xl tracking-wide text-ivory">MISEVA</span>
           <Suspense fallback={<div className="h-8" />}>

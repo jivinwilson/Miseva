@@ -57,6 +57,14 @@ class TableService {
         });
     }
 
+    void regenerateQr(RestaurantActor actor, UUID id) {
+        tx.inContext(actor.businessId(), actor.userId(), () -> {
+            TableRow table = visible(actor, id);
+            tables.regenerateQr(actor.businessId(), id, actor.userId());
+            audit.record(actor.businessId(), table.branchId(), actor.userId(), "restaurant.table.qr_regenerated", "dining_table", id);
+        });
+    }
+
     TableRow visible(RestaurantActor actor, UUID id) {
         TableRow table = tables.find(actor.businessId(), id)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "TABLE_NOT_FOUND", "Table not found."));
