@@ -32,7 +32,7 @@ CREATE ROLE misva_owner LOGIN PASSWORD '$ownerPw' NOSUPERUSER NOBYPASSRLS;
 CREATE ROLE misva_app LOGIN PASSWORD '$appPw' NOSUPERUSER NOBYPASSRLS;
 GRANT misva_owner TO CURRENT_USER;
 "@
-$sql | Run-Psql @conn
+Run-Psql @conn -c $sql
 Run-Psql @conn -f (Join-Path $root 'database\schema-setup.sql')
 
 $verify = Run-Psql @conn -tAc "select has_schema_privilege('anon','miseva','USAGE') or has_schema_privilege('authenticated','miseva','USAGE')"
