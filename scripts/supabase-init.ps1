@@ -6,17 +6,19 @@ if (Test-Path $envFile) { throw '.env.production already exists. Delete it yours
 
 $ref = 'wqjkimzrvhlqjjvmbovn'
 $dbHost = Read-Host 'Session pooler host (e.g. aws-0-xx-xxxx-x.pooler.supabase.com)'
+if (-not $dbHost -or $dbHost -notmatch '^[A-Za-z0-9.-]+$') { throw 'A pooler host is required (Supabase > Connect > Session pooler).' }
 $adminUser = Read-Host "Pooler user (default postgres.$ref)"
 if (-not $adminUser) { $adminUser = "postgres.$ref" }
 $secure = Read-Host 'Supabase database password' -AsSecureString
 $adminPw = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($secure))
 
+function Run-Psql { & $psql @args; if ($LASTEXITCODE -ne 0) { throw 'psql failed; nothing further was done.' } }
 function New-Secret($n) { -join ((48..57 + 65..90 + 97..122) | Get-Random -Count $n | ForEach-Object { [char]$_ }) }
 $env:PGPASSWORD = $adminPw
 $env:PGSSLMODE = 'require'
 $conn = @('-h', $dbHost, '-p', '5432', '-U', $adminUser, '-d', 'postgres', '-v', 'ON_ERROR_STOP=1', '-X', '-q')
 
-$existing = & $psql @conn -tAc "select string_agg(rolname, ',') from pg_roles where rolname in ('misva_owner','misva_app') union all select string_agg(nspname, ',') from pg_namespace where nspname = 'miseva'"
+$existing = Run-Psql @conn -tAc "select string_agg(rolname, ',') from pg_roles where rolname in ('misva_owner','misva_app') union all select string_agg(nspname, ',') from pg_namespace where nspname = 'miseva'"
 if ($existing -and ($existing -join '').Trim()) { throw "Found existing roles or schema ($existing). Nothing changed." }
 
 Write-Host 'This creates roles misva_owner and misva_app and the schema "miseva" in your Supabase database. Nothing existing is touched.'
@@ -30,11 +32,11 @@ CREATE ROLE misva_owner LOGIN PASSWORD '$ownerPw' NOSUPERUSER NOBYPASSRLS;
 CREATE ROLE misva_app LOGIN PASSWORD '$appPw' NOSUPERUSER NOBYPASSRLS;
 GRANT misva_owner TO CURRENT_USER;
 "@
-$sql | & $psql @conn
-& $psql @conn -f (Join-Path $root 'database\schema-setup.sql')
+$sql | Run-Psql @conn
+Run-Psql @conn -f (Join-Path $root 'database\schema-setup.sql')
 
-$verify = & $psql @conn -tAc "select has_schema_privilege('anon','miseva','USAGE') or has_schema_privilege('authenticated','miseva','USAGE')"
-if ($verify.Trim() -ne 'f') { throw 'anon/authenticated can access the miseva schema. Stopping.' }
+$verify = Run-Psql @conn -tAc "select has_schema_privilege('anon','miseva','USAGE') or has_schema_privilege('authenticated','miseva','USAGE')"
+if ((($verify -join '').Trim()) -ne 'f') { throw 'anon/authenticated can access the miseva schema. Stopping.' }
 
 @"
 DB_HOST=$dbHost
