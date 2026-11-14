@@ -6,7 +6,7 @@ function safeNext(value: string | null) {
   return value && value.startsWith("/") && !value.startsWith("//") ? value : "/dashboard";
 }
 
-export async function GET(request: NextRequest) {
+async function refresh(request: NextRequest) {
   const next = safeNext(request.nextUrl.searchParams.get("next"));
   const refreshToken = await getRefreshToken();
   if (refreshToken) {
@@ -16,11 +16,14 @@ export async function GET(request: NextRequest) {
         body: JSON.stringify({ refreshToken }),
       });
       await setSession(tokens);
-      return NextResponse.redirect(new URL(next, request.url));
+      return NextResponse.redirect(new URL(next, request.url), 303);
     } catch {
       await clearSession();
     }
   }
   await clearSession();
-  return NextResponse.redirect(new URL("/login", request.url));
+  return NextResponse.redirect(new URL("/login", request.url), 303);
 }
+
+export const GET = refresh;
+export const POST = refresh;
