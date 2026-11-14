@@ -1,5 +1,3 @@
-CREATE EXTENSION IF NOT EXISTS citext;
-
 CREATE FUNCTION touch_updated_at() RETURNS trigger
     LANGUAGE plpgsql AS $$
 BEGIN
@@ -85,7 +83,7 @@ CREATE TRIGGER trg_plan_entitlements_touch BEFORE UPDATE ON plan_entitlements
 
 CREATE TABLE users (
     id                 uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    email              citext NOT NULL,
+    email              text NOT NULL,
     password_hash      text NOT NULL,
     full_name          text NOT NULL,
     status             text NOT NULL DEFAULT 'pending',
@@ -98,9 +96,9 @@ CREATE TABLE users (
     updated_at         timestamptz NOT NULL DEFAULT now(),
     updated_by         uuid,
     version            bigint NOT NULL DEFAULT 0,
-    CONSTRAINT uq_users_email UNIQUE (email),
     CONSTRAINT ck_users_status CHECK (status IN ('pending', 'active', 'locked', 'disabled')),
     CONSTRAINT ck_users_failed_logins CHECK (failed_login_count >= 0)
 );
+CREATE UNIQUE INDEX uq_users_email ON users (lower(email));
 CREATE TRIGGER trg_users_touch BEFORE UPDATE ON users
     FOR EACH ROW EXECUTE FUNCTION touch_updated_at();

@@ -5,7 +5,7 @@ CREATE FUNCTION app_user_id() RETURNS uuid
     LANGUAGE sql STABLE AS $$ SELECT nullif(current_setting('app.user_id', true), '')::uuid $$;
 
 CREATE FUNCTION business_slug_exists(p_slug text) RETURNS boolean
-    LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public, pg_temp
+    LANGUAGE sql STABLE SECURITY DEFINER SET search_path = miseva, pg_temp
 AS $$ SELECT EXISTS (SELECT 1 FROM businesses WHERE slug = p_slug) $$;
 REVOKE ALL ON FUNCTION business_slug_exists(text) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION business_slug_exists(text) TO misva_app;

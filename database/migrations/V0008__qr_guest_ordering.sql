@@ -55,7 +55,7 @@ REVOKE UPDATE ON guest_order_lines FROM misva_app;
 
 CREATE FUNCTION public_table_by_qr(p_token text)
     RETURNS TABLE (business_id uuid, branch_id uuid, table_id uuid)
-    LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public, pg_temp
+    LANGUAGE sql STABLE SECURITY DEFINER SET search_path = miseva, pg_temp
 AS $$
     SELECT t.business_id, t.branch_id, t.id
     FROM dining_tables t
