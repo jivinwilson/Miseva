@@ -29,7 +29,10 @@ class GuestOrderService {
     record NewGuestLine(UUID menuItemId, int quantity, String note) {
     }
 
-    record GuestOrderStatus(UUID id, String status) {
+    record ItemProgress(String itemName, int quantity, String status) {
+    }
+
+    record GuestOrderStatus(UUID id, String status, List<ItemProgress> items) {
     }
 
     record PendingOrder(GuestOrder order, List<GuestLine> lines) {
@@ -82,7 +85,7 @@ class GuestOrderService {
                         l.quantity(), blankToNull(l.note()));
             }
             audit.record(ref.businessId(), ref.branchId(), null, "restaurant.guest_order.submitted", "guest_order", id);
-            return new GuestOrderStatus(id, "pending");
+            return new GuestOrderStatus(id, "pending", List.of());
         });
     }
 
@@ -90,7 +93,7 @@ class GuestOrderService {
         TableRef ref = resolve(token);
         return tx.inContext(ref.businessId(), null, () -> guestOrders.find(ref.businessId(), orderId)
                 .filter(o -> o.tableId().equals(ref.tableId()))
-                .map(o -> new GuestOrderStatus(o.id(), o.status()))
+                .map(o -> new GuestOrderStatus(o.id(), o.status(), guestOrders.progress(ref.businessId(), o.id())))
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "GUEST_ORDER_NOT_FOUND", "Order not found.")));
     }
 
@@ -122,7 +125,7 @@ class GuestOrderService {
             }
             for (GuestLine l : lines) {
                 orders.insertLine(actor.businessId(), order.branchId(), sessionId, l.menuItemId(), l.itemName(),
-                        l.unitPriceMinor(), l.taxRateBp(), l.quantity(), l.note(), actor.userId());
+                        l.unitPriceMinor(), l.taxRateBp(), l.quantity(), l.note(), actor.userId(), l.id());
             }
             guestOrders.decide(actor.businessId(), id, "accepted", sessionId, actor.userId());
             audit.record(actor.businessId(), order.branchId(), actor.userId(), "restaurant.guest_order.accepted", "guest_order", id);

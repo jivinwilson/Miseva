@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { ApiError, apiFetch, type RecipeLine, type SessionView } from "@/lib/api";
+import { ApiError, apiFetch, type AlertView, type BranchList, type Me, type RecipeLine, type SessionView } from "@/lib/api";
 import { percentToBp, toMinor } from "@/lib/money";
 import { getAccessToken } from "@/lib/session";
 
@@ -250,5 +250,60 @@ export async function saveRecipeAction(menuItemId: string, lines: { ingredientId
   } catch (e) {
     return failure(e, "/dashboard/menu");
   }
+  return { ok: true };
+}
+
+export interface AlertsResult {
+  branchId: string;
+  branchName: string;
+  alerts: AlertView[];
+}
+
+export async function fetchAlertsAction(): Promise<AlertsResult | null> {
+  const t = await getAccessToken();
+  if (!t) return null;
+  try {
+    const me = await apiFetch<Me>("/me", { token: t });
+    if (!me.permissions.includes("restaurant.order.take")) return null;
+    const list = await apiFetch<BranchList>("/branches", { token: t });
+    const results = await Promise.all(
+      list.items
+        .filter((b) => b.status === "active")
+        .map(async (b) => ({ branch: b, alerts: await apiFetch<AlertView[]>(`/restaurant/branches/${b.id}/alerts`, { token: t }) })),
+    );
+    const first = results[0];
+    if (!first) return null;
+    return {
+      branchId: first.branch.id,
+      branchName: results.length > 1 ? "All branches" : first.branch.name,
+      alerts: results.flatMap((r) => r.alerts).sort((a, b) => a.at.localeCompare(b.at)),
+    };
+  } catch {
+    return null;
+  }
+}
+
+export async function resolveRequestAction(id: string) {
+  const t = await getAccessToken();
+  if (!t) return;
+  await apiFetch(`/restaurant/service-requests/${encodeURIComponent(id)}/done`, { method: "POST", token: t }).catch(() => undefined);
+  revalidatePath("/dashboard/floor");
+}
+
+export async function resolveRequestFormAction(fd: FormData) {
+  await resolveRequestAction(text(fd, "id"));
+}
+
+export async function assignWaiterAction(tableId: string, membershipId: string | null): Promise<ActionState> {
+  try {
+    await apiFetch(`/restaurant/tables/${encodeURIComponent(tableId)}/waiter`, {
+      method: "PUT",
+      token: await token("/dashboard/floor"),
+      body: JSON.stringify({ membershipId }),
+    });
+  } catch (e) {
+    return failure(e, "/dashboard/floor");
+  }
+  revalidatePath("/dashboard/floor");
   return { ok: true };
 }

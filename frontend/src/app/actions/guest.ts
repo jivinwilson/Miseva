@@ -37,3 +37,13 @@ export async function guestOrderStatus(token: string, orderId: string): Promise<
     return null;
   }
 }
+
+export async function guestServiceRequest(token: string, type: "call_waiter" | "request_bill"): Promise<{ ok: boolean; error?: string }> {
+  if (!TOKEN.test(token)) return { ok: false, error: "This table code is not valid." };
+  try {
+    await apiFetch(`/public/tables/${token}/requests`, { method: "POST", body: JSON.stringify({ type }) });
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: e instanceof ApiError ? e.message : "Could not reach staff. Please wave to a member of staff." };
+  }
+}

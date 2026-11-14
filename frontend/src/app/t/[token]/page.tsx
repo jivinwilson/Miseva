@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { ApiError, apiFetch, type PublicMenu } from "@/lib/api";
-import { GuestMenu } from "./guest-menu";
+import { GuestMenu, ServiceButtons } from "./guest-menu";
 
 export const metadata: Metadata = { title: "Order at your table", robots: { index: false, follow: false } };
 
@@ -42,6 +42,7 @@ async function Table({ params }: { params: PageProps<"/t/[token]">["params"] }) 
         <h1 className="mt-1 font-serif text-3xl text-obsidian">{menu.businessName}</h1>
         <p className="mt-1 text-obsidian/70">Table {menu.tableCode}</p>
       </header>
+      <ServiceButtons token={token} />
       <GuestMenu token={token} menu={menu} />
     </>
   );

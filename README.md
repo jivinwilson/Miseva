@@ -12,6 +12,11 @@ Slice 3 (ingredients): ingredients in g, ml or pcs with low-stock thresholds, pe
 
 Note for this machine: Windows Smart App Control blocks PostgreSQL's unsigned `citext` extension, so emails are stored lowercase as plain text with a unique index on `lower(email)` (migration V0009).
 
+Service flow: managers assign a waiter to each table; an Alerts button on every dashboard page (polls every 8 seconds, optional chime) shows new guest orders, food ready to serve, waiter calls and bill requests, targeted to the table's waiter (managers see everything). Guests see each item's progress and can call a waiter or ask for the bill.
+
+## Phones on your Wi-Fi
+Set `PUBLIC_APP_URL=http://<this PC's IP>:3001` and `DEV_ALLOWED_HOSTS=<this PC's IP>` in `frontend/.env.local`, restart the frontend, and allow inbound TCP 3001 in Windows Firewall for the private network. QR codes then point to that address.
+
 ## Local setup
 1. `powershell -ExecutionPolicy Bypass -File scripts\db-init.ps1` creates the `misva` database, the `misva_owner` (migrations) and `misva_app` (runtime) roles, and a git-ignored `.env`.
 2. Backend: `cd backend` then `gradlew.bat bootRun` (set `SERVER_PORT=8081` if 8080 is taken). Flyway applies `database/migrations` on start.

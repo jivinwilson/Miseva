@@ -79,11 +79,13 @@ class OrderRepository {
     }
 
     void insertLine(UUID businessId, UUID branchId, UUID sessionId, UUID itemId, String name, long price, int taxBp,
-                    int quantity, String note, UUID by) {
+                    int quantity, String note, UUID by, UUID guestOrderLineId) {
         jdbc.sql("INSERT INTO order_lines (business_id, branch_id, session_id, menu_item_id, item_name, unit_price_minor,"
-                        + " tax_rate_bp, quantity, note, created_by) VALUES (:b, :br, :s, :i, :n, :p, :t, :q, :note, :by)")
+                        + " tax_rate_bp, quantity, note, created_by, guest_order_line_id)"
+                        + " VALUES (:b, :br, :s, :i, :n, :p, :t, :q, :note, :by, :g)")
                 .param("b", businessId).param("br", branchId).param("s", sessionId).param("i", itemId).param("n", name)
-                .param("p", price).param("t", taxBp).param("q", quantity).param("note", note).param("by", by).update();
+                .param("p", price).param("t", taxBp).param("q", quantity).param("note", note).param("by", by)
+                .param("g", guestOrderLineId).update();
     }
 
     boolean transitionLine(UUID businessId, UUID id, String from, String to) {

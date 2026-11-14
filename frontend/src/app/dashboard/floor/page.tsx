@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
-import { decideGuestOrderAction } from "@/app/actions/restaurant";
+import { decideGuestOrderAction, resolveRequestFormAction } from "@/app/actions/restaurant";
+import { WaiterSelect } from "@/components/waiter-select";
 import { AutoRefresh, BranchPicker, OpenTableForm, TableDialog } from "@/components/restaurant-forms";
-import { apiFetch, type BusinessSummary, type PendingGuestOrder, type TableView } from "@/lib/api";
+import { apiFetch, type AlertView, type BusinessSummary, type PendingGuestOrder, type TableView, type Waiter } from "@/lib/api";
 import { formatMoney } from "@/lib/money";
 import { loadContext, single } from "@/lib/restaurant";
 
@@ -41,6 +42,12 @@ async function Floor({ searchParams }: { searchParams: PageProps<"/dashboard/flo
     ? await apiFetch<PendingGuestOrder[]>(`/restaurant/branches/${branch.id}/guest-orders`, { token })
     : [];
   const back = `/dashboard/floor?branch=${branch.id}`;
+  const canManageTables = me.permissions.includes("restaurant.table.manage");
+  const [waiters, alerts] = await Promise.all([
+    canManageTables ? apiFetch<Waiter[]>(`/restaurant/branches/${branch.id}/waiters`, { token }) : Promise.resolve([] as Waiter[]),
+    canTake ? apiFetch<AlertView[]>(`/restaurant/branches/${branch.id}/alerts`, { token }) : Promise.resolve([] as AlertView[]),
+  ]);
+  const requests = alerts.filter((a) => a.kind === "call_waiter" || a.kind === "request_bill");
 
   return (
     <div className="space-y-6">
@@ -57,6 +64,24 @@ async function Floor({ searchParams }: { searchParams: PageProps<"/dashboard/flo
           {me.permissions.includes("restaurant.table.manage") ? <TableDialog branchId={branch.id} triggerClassName={primary} /> : null}
         </div>
       </div>
+
+      {requests.length ? (
+        <section aria-labelledby="requests" className="rounded-2xl border border-gold/60 bg-white p-5 shadow-sm">
+          <h2 id="requests" className="font-serif text-xl text-obsidian">Tables asking for you</h2>
+          <ul className="mt-3 flex flex-wrap gap-2">
+            {requests.map((r) => (
+              <li key={r.id} className="flex items-center gap-3 rounded-xl border border-obsidian/10 bg-ivory px-3 py-2 text-sm">
+                <span className="rounded bg-obsidian px-1.5 py-0.5 text-xs font-medium text-ivory">{r.tableCode}</span>
+                {r.kind === "call_waiter" ? "Calling a waiter" : "Wants the bill"}
+                <form action={resolveRequestFormAction}>
+                  <input type="hidden" name="id" value={r.id} />
+                  <button type="submit" className={subtle}>Done</button>
+                </form>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
 
       {guestOrders.length ? (
         <section aria-labelledby="guest-orders" className="rounded-2xl border border-gold/60 bg-white p-5 shadow-sm">
@@ -121,9 +146,15 @@ async function Floor({ searchParams }: { searchParams: PageProps<"/dashboard/flo
                   <p className="text-sm text-obsidian/60">
                     {t.seats} seats{t.area ? ` · ${t.area}` : ""}
                   </p>
+                  {!canManageTables && t.waiterName ? <p className="text-xs text-obsidian/60">Waiter: {t.waiterName}</p> : null}
                 </div>
                 <div className="flex flex-col items-end gap-1">
                   <span className="rounded-full bg-obsidian/5 px-2.5 py-0.5 text-xs text-obsidian/80">{state}</span>
+                  {t.openRequests ? (
+                    <span className="rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-900">
+                      {t.openRequests} {t.openRequests === 1 ? "request" : "requests"}
+                    </span>
+                  ) : null}
                   {t.pendingGuestOrders ? (
                     <span className="rounded-full bg-gold px-2.5 py-0.5 text-xs font-medium text-obsidian">
                       {t.pendingGuestOrders} guest {t.pendingGuestOrders === 1 ? "order" : "orders"}
@@ -146,6 +177,9 @@ async function Floor({ searchParams }: { searchParams: PageProps<"/dashboard/flo
                 </div>
               ) : t.active && canTake ? (
                 <OpenTableForm tableId={t.id} />
+              ) : null}
+              {canManageTables ? (
+                <WaiterSelect tableId={t.id} tableCode={t.code} current={t.waiterMembershipId} waiters={waiters} />
               ) : null}
             </li>
           );

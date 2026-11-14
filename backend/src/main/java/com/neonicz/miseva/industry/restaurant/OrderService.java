@@ -94,7 +94,7 @@ class OrderService {
             for (NewLine l : lines) {
                 Item item = items.get(l.menuItemId());
                 orders.insertLine(actor.businessId(), session.branchId(), sessionId, item.id(), item.name(), item.priceMinor(),
-                        item.taxRateBp(), l.quantity(), blankToNull(l.note()), actor.userId());
+                        item.taxRateBp(), l.quantity(), blankToNull(l.note()), actor.userId(), null);
             }
             audit.record(actor.businessId(), session.branchId(), actor.userId(), "restaurant.order.lines_added", "dining_session", sessionId);
             return view(actor, sessionId);

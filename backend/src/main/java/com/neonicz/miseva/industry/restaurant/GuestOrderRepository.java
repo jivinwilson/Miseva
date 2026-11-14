@@ -101,6 +101,16 @@ class GuestOrderRepository {
                 .list();
     }
 
+    List<GuestOrderService.ItemProgress> progress(UUID businessId, UUID orderId) {
+        return jdbc.sql("SELECT g.item_name, g.quantity, coalesce(l.status, 'pending') AS status FROM guest_order_lines g"
+                        + " LEFT JOIN order_lines l ON l.guest_order_line_id = g.id"
+                        + " WHERE g.business_id = :b AND g.guest_order_id = :o ORDER BY g.item_name")
+                .param("b", businessId).param("o", orderId)
+                .query((rs, n) -> new GuestOrderService.ItemProgress(rs.getString("item_name"), rs.getInt("quantity"),
+                        rs.getString("status")))
+                .list();
+    }
+
     void decide(UUID businessId, UUID id, String status, UUID sessionId, UUID by) {
         jdbc.sql("UPDATE guest_orders SET status = :s, session_id = :session, decided_by = :by, decided_at = now()"
                         + " WHERE business_id = :b AND id = :id AND status = 'pending'")

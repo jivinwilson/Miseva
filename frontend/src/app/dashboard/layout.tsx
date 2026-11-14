@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { logoutAction } from "@/app/actions/auth";
 import { DashboardNav } from "@/components/dashboard-nav";
+import { ServiceAlerts } from "@/components/service-alerts";
 
 export default function DashboardLayout({ children }: LayoutProps<"/dashboard">) {
   return (
@@ -12,6 +13,8 @@ export default function DashboardLayout({ children }: LayoutProps<"/dashboard">)
             <DashboardNav />
           </Suspense>
         </div>
+        <div className="flex items-center gap-2">
+        <ServiceAlerts />
         <form action={logoutAction}>
           <button
             type="submit"
@@ -20,6 +23,7 @@ export default function DashboardLayout({ children }: LayoutProps<"/dashboard">)
             Sign out
           </button>
         </form>
+        </div>
       </header>
       <main className="mx-auto max-w-5xl px-6 py-10">{children}</main>
     </div>

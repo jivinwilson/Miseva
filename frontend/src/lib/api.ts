@@ -145,6 +145,9 @@ export interface TableView {
   active: boolean;
   qrToken: string;
   pendingGuestOrders: number;
+  waiterMembershipId?: string;
+  waiterName?: string;
+  openRequests: number;
   sessionId?: string;
   sessionStatus?: "open" | "billed";
   guests?: number;
@@ -240,6 +243,7 @@ export interface PublicMenu {
 export interface GuestOrderStatus {
   id: string;
   status: "pending" | "accepted" | "rejected";
+  items: { itemName: string; quantity: number; status: "pending" | LineStatus }[];
 }
 
 export interface PendingGuestOrder {
@@ -267,4 +271,18 @@ export interface RecipeLine {
 export interface StockView {
   levels: { ingredientId: string; name: string; unit: IngredientUnit; onHand: number; lowStockThreshold: number; low: boolean }[];
   recent: { id: string; ingredientName: string; unit: IngredientUnit; quantity: number; reason: string; note?: string; createdAt: string }[];
+}
+
+export interface AlertView {
+  kind: "guest_order" | "ready" | "call_waiter" | "request_bill";
+  id: string;
+  tableCode: string;
+  detail?: string;
+  at: string;
+  mine: boolean;
+}
+
+export interface Waiter {
+  membershipId: string;
+  name: string;
 }

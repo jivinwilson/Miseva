@@ -36,7 +36,8 @@ async function TableQr({ params, searchParams }: {
   const h = await headers();
   const host = h.get("x-forwarded-host") ?? h.get("host");
   const proto = h.get("x-forwarded-proto") ?? (host?.startsWith("localhost") ? "http" : "https");
-  const url = `${proto}://${host}/t/${table.qrToken}`;
+  const base = process.env.PUBLIC_APP_URL?.replace(/\/+$/, "") || `${proto}://${host}`;
+  const url = `${base}/t/${table.qrToken}`;
   const qr = await QRCode.toDataURL(url, { margin: 1, width: 512, errorCorrectionLevel: "M", color: { dark: "#080F14", light: "#FFFFFF" } });
 
   return (
