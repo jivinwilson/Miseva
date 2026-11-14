@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { RecipeDialog } from "@/components/inventory-forms";
 import { CategoryDialog, ItemDialog } from "@/components/restaurant-forms";
-import { apiFetch, type BusinessSummary, type Menu } from "@/lib/api";
+import { apiFetch, type BusinessSummary, type Ingredient, type Menu } from "@/lib/api";
 import { formatMoney } from "@/lib/money";
 import { loadContext } from "@/lib/restaurant";
 
@@ -30,6 +31,11 @@ async function MenuView() {
     apiFetch<BusinessSummary>("/businesses/current", { token }),
   ]);
   const canManage = me.permissions.includes("restaurant.menu.manage");
+  const canSeeRecipes = me.permissions.includes("restaurant.inventory.read");
+  const canEditRecipes = me.permissions.includes("restaurant.inventory.manage");
+  const ingredients = canSeeRecipes
+    ? (await apiFetch<Ingredient[]>("/restaurant/ingredients", { token })).filter((i) => i.active)
+    : [];
 
   return (
     <div className="space-y-6">
@@ -78,6 +84,9 @@ async function MenuView() {
                       {formatMoney(i.priceMinor, business.currency)}
                       <span className="block text-xs text-obsidian/60">+{i.taxRateBp / 100}% tax</span>
                     </span>
+                    {canSeeRecipes ? (
+                      <RecipeDialog itemId={i.id} itemName={i.name} ingredients={ingredients} canManage={canEditRecipes} triggerClassName={subtle} />
+                    ) : null}
                     {canManage ? <ItemDialog categories={menu.categories} item={i} triggerLabel="Edit" triggerClassName={subtle} /> : null}
                   </div>
                 </li>

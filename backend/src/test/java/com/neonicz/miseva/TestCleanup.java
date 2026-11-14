@@ -24,8 +24,8 @@ final class TestCleanup {
         }
         owner.update("DELETE FROM auth_sessions WHERE user_id IN (SELECT id FROM users WHERE email LIKE ?)", like);
         for (UUID b : businesses) {
-            for (String table : new String[] {"guest_order_lines", "guest_orders", "payments", "bill_lines", "bills", "order_lines", "dining_sessions",
-                    "dining_tables", "menu_items", "menu_categories"}) {
+            for (String table : new String[] {"stock_movements", "recipe_lines", "guest_order_lines", "guest_orders", "payments", "bill_lines", "bills", "order_lines", "dining_sessions",
+                    "dining_tables", "menu_items", "ingredients", "menu_categories"}) {
                 owner.update("DELETE FROM " + table + " WHERE business_id = ?", b);
             }
             owner.update("DELETE FROM branch_access WHERE business_id = ?", b);

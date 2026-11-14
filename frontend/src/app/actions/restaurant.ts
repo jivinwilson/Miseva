@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { ApiError, apiFetch, type SessionView } from "@/lib/api";
+import { ApiError, apiFetch, type RecipeLine, type SessionView } from "@/lib/api";
 import { percentToBp, toMinor } from "@/lib/money";
 import { getAccessToken } from "@/lib/session";
 
@@ -196,4 +196,59 @@ export async function regenerateQrAction(fd: FormData) {
     if (e instanceof ApiError && e.problem.status === 401) redirect(`/auth/refresh?next=${encodeURIComponent(back)}`);
   }
   revalidatePath("/dashboard/tables");
+}
+
+export async function createIngredientAction(_prev: ActionState, fd: FormData): Promise<ActionState> {
+  const name = text(fd, "name");
+  const threshold = Number(text(fd, "threshold") || "0");
+  if (!name) return { fieldErrors: { name: "Enter an ingredient name." } };
+  if (!Number.isFinite(threshold) || threshold < 0) return { fieldErrors: { threshold: "Enter 0 or more." } };
+  try {
+    await apiFetch("/restaurant/ingredients", {
+      method: "POST",
+      token: await token("/dashboard/stock"),
+      body: JSON.stringify({ name, unit: text(fd, "unit"), lowStockThreshold: threshold }),
+    });
+  } catch (e) {
+    return failure(e, "/dashboard/stock");
+  }
+  revalidatePath("/dashboard/stock");
+  return { ok: true };
+}
+
+export async function recordStockAction(_prev: ActionState, fd: FormData): Promise<ActionState> {
+  const branchId = text(fd, "branchId");
+  const next = `/dashboard/stock?branch=${branchId}`;
+  const quantity = Number(text(fd, "quantity"));
+  if (!Number.isFinite(quantity) || quantity === 0) return { fieldErrors: { quantity: "Enter a quantity other than zero." } };
+  try {
+    await apiFetch(`/restaurant/branches/${encodeURIComponent(branchId)}/stock/movements`, {
+      method: "POST",
+      token: await token(next),
+      body: JSON.stringify({ ingredientId: text(fd, "ingredientId"), reason: text(fd, "reason"), quantity, note: text(fd, "note") }),
+    });
+  } catch (e) {
+    return failure(e, next);
+  }
+  revalidatePath("/dashboard/stock");
+  return { ok: true };
+}
+
+export async function loadRecipeAction(menuItemId: string): Promise<RecipeLine[]> {
+  return apiFetch<RecipeLine[]>(`/restaurant/menu/items/${encodeURIComponent(menuItemId)}/recipe`, {
+    token: await token("/dashboard/menu"),
+  });
+}
+
+export async function saveRecipeAction(menuItemId: string, lines: { ingredientId: string; quantity: number }[]): Promise<ActionState> {
+  try {
+    await apiFetch(`/restaurant/menu/items/${encodeURIComponent(menuItemId)}/recipe`, {
+      method: "PUT",
+      token: await token("/dashboard/menu"),
+      body: JSON.stringify({ lines }),
+    });
+  } catch (e) {
+    return failure(e, "/dashboard/menu");
+  }
+  return { ok: true };
 }

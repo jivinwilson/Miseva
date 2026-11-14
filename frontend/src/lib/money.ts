@@ -11,3 +11,7 @@ export function percentToBp(input: string) {
   const value = Number(input.trim() || "0");
   return Number.isFinite(value) && value >= 0 && value <= 100 ? Math.round(value * 100) : NaN;
 }
+
+export function formatQty(value: number, unit: string) {
+  return `${new Intl.NumberFormat("en-IN", { maximumFractionDigits: 3 }).format(value)} ${unit}`;
+}

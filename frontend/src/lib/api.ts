@@ -246,3 +246,25 @@ export interface PendingGuestOrder {
   order: { id: string; branchId: string; tableId: string; tableCode: string; status: string; guests: number; note?: string; createdAt: string };
   lines: { id: string; itemName: string; unitPriceMinor: number; quantity: number; note?: string }[];
 }
+
+export type IngredientUnit = "g" | "ml" | "pcs";
+
+export interface Ingredient {
+  id: string;
+  name: string;
+  unit: IngredientUnit;
+  lowStockThreshold: number;
+  active: boolean;
+}
+
+export interface RecipeLine {
+  ingredientId: string;
+  name?: string;
+  unit?: IngredientUnit;
+  quantity: number;
+}
+
+export interface StockView {
+  levels: { ingredientId: string; name: string; unit: IngredientUnit; onHand: number; lowStockThreshold: number; low: boolean }[];
+  recent: { id: string; ingredientName: string; unit: IngredientUnit; quantity: number; reason: string; note?: string; createdAt: string }[];
+}

@@ -22,15 +22,17 @@ class BillService {
     private final OrderService orderService;
     private final BranchGuard guard;
     private final AuditService audit;
+    private final InventoryRepository inventory;
 
     BillService(TenantTx tx, BillRepository bills, OrderRepository orders, OrderService orderService, BranchGuard guard,
-                AuditService audit) {
+                AuditService audit, InventoryRepository inventory) {
         this.tx = tx;
         this.bills = bills;
         this.orders = orders;
         this.orderService = orderService;
         this.guard = guard;
         this.audit = audit;
+        this.inventory = inventory;
     }
 
     SessionView issue(RestaurantActor actor, UUID sessionId) {
@@ -84,6 +86,7 @@ class BillService {
             if (amountMinor == due) {
                 bills.markPaid(actor.businessId(), billId);
                 orders.transitionSession(actor.businessId(), bill.sessionId(), "billed", "closed");
+                inventory.consumeForSession(actor.businessId(), bill.branchId(), bill.sessionId(), actor.userId());
                 audit.record(actor.businessId(), bill.branchId(), actor.userId(), "restaurant.bill.paid", "bill", billId);
             }
             return orderService.view(actor, bill.sessionId());
